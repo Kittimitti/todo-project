@@ -330,7 +330,7 @@ function addTodo () {
         
         todoAttribute.appendChild(createDate(showTodaysDate()));
         //Date.now() gives the time in milliseconds, on which the todo-s can be sorted
-        todoAttribute.value = Date.now();
+        todoAttribute.setAttribute("data-timestamp", Date.now());
         
         todoAttribute.appendChild(createPriority("priority"));
         todoAttribute.appendChild(dateInput);
@@ -591,11 +591,13 @@ function priorityToNumber(attribute) {
     else {
         return 0;
     }
+
+    //shorter version:  return attribute.classList.contains("is-hidden") ? 1 : 2;
 }
 
 
-//sorting todos on the basis of priority
-function showPriorityFirst () {
+
+function sortItems(compFun) {
 
     //constructing the array from DOM as a local variable in the sort function
     let todoListUl = document.getElementById("todo-lists-ul");
@@ -605,7 +607,7 @@ function showPriorityFirst () {
     for (let i = 0; i < items.length; i++) {
         let todoObject = {
             node: items[i],
-            date: items[i].children[0].children[0].children[2].children[0].textContent,
+            date: items[i].children[0].children[0].children[2].getAttribute("data-timestamp"),
             priority: priorityToNumber(items[i].children[0].children[0].children[2].children[1])
         }
 
@@ -613,9 +615,7 @@ function showPriorityFirst () {
     }
 
     //sort the array
-    list.sort(function (a, b) {
-        return a.priority - b.priority;
-    });
+    list.sort(compFun);
 
     //rearrange the items in the DOM to correspond to the sorted array
     //functions used for adding a node will move the node if it’s already in the DOM
@@ -624,31 +624,20 @@ function showPriorityFirst () {
     }
 }
 
-
+//sorting todos on the basis of priority
+function showPriorityFirst () {
+    sortItems(
+        function (a, b) {
+            return a.priority - b.priority;
+        });
+}
 
 //sorting todos on the basis of date
 function showOldestFirst () {
-    let todoListUl = document.getElementById("todo-lists-ul");
-    let items = todoListUl.children;
-    let list = [];
-
-    for (let i = 0; i < items.length; i++) {
-        let todoObject = {
-            node: items[i],
-            date: items[i].children[0].children[0].children[2].value,
-            priority: priorityToNumber(items[i].children[0].children[0].children[2].children[1])
-        }
-
-        list.push(todoObject);
-    }
-
-    list.sort(function (a, b) {
-        return a.date - b.date;
-    });
-
-    for (let counter = 0; counter < list.length; counter++) {
-        todoListUl.appendChild(list[counter].node);
-    }
+    sortItems(
+        function (a, b) {
+            return a.date - b.date;
+        });
 }
 
 
@@ -689,7 +678,7 @@ function updateDate(dateText, event) {
     let pickedYear = Number(dateText.substring(8,12));
     let pickedDate = new Date(pickedYear, pickedMonth, pickedDay);  //the key is that we need to give proper format in the new Date function
 
-    todoAttribute.value = pickedDate.getTime();
+    todoAttribute.setAttribute("data-timestamp", pickedDate.getTime());
  
 }
 
